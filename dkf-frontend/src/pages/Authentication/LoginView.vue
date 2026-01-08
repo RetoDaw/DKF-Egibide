@@ -10,13 +10,13 @@
         <form>
           <div class="input-group mb-3">
             <span class="input-group-text">@</span>
-            <input type="text" class="form-control" placeholder="Email" aria-label="Server">
+            <input type="email" class="form-control" placeholder="Email" aria-label="Email">
           </div>
           <div class="input-group mb-3">
             <span class="input-group-text">
               <img src="@/assets/images/key.png" alt="email" width="18" height="18" />
             </span>
-            <input type="password" class="form-control" placeholder="Password">
+            <input type="password" class="form-control" placeholder="Contrseña">
           </div>
           <div class="d-grid">
             <button class="btn btn-primary">Entrar</button>
