@@ -18,7 +18,7 @@ import { ref } from 'vue';
       <div class="card-body">
         <h5 class="card-title text-center mb-3">Iniciar Sesión</h5>
 
-        <form>
+        <form @submit.prevent="login">
           <div class="input-group mb-3">
             <span class="input-group-text">@</span>
             <input type="email" class="form-control" placeholder="Email" v-model="email" aria-label="Email">
