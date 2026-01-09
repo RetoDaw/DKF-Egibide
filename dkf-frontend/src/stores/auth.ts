@@ -11,7 +11,10 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await fetch('http://localhost:8000/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: JSON.stringify({ email, password }),
       });
 
@@ -22,7 +25,10 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = data.token;
       localStorage.setItem('token', data.token);
 
+      currentUser.value = data.user as User;
+
       router.replace('/');
+      return true;
 
     } catch (error) {
       console.error(error);
