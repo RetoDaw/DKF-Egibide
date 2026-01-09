@@ -1,4 +1,12 @@
 @charset "UTF-8";
+:root {
+  --bs-btn-active-border-color: transparent;
+}
+
+.btn:focus, .btn:focus-visible, .btn.active, .btn.show, .btn:active {
+  box-shadow: none;
+}
+
 /*!
  * Bootstrap  v5.3.8 (https://getbootstrap.com/)
  * Copyright 2011-2025 The Bootstrap Authors

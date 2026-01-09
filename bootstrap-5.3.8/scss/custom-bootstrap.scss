@@ -10,6 +10,20 @@ $dropdown-bg: #ffffff;
 $modal-content-bg: #ffffff;
 $table-bg: #ffffff;
 
+// BOTONES
+:root {
+  --bs-btn-active-border-color: transparent;
+}
+
+.btn {
+  &:focus,
+  &:focus-visible,
+  &.active,
+  &.show,
+  &:active {
+    box-shadow: none;
+  }
+}
 
 // IMPORT BOOTSTRAP
 @import "bootstrap.scss";
