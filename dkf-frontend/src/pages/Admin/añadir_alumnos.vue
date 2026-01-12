@@ -1,7 +1,7 @@
 <script></script>
 
 <template>
-  <h2>MIS DATOS</h2>
+  <h2>AÑADIR ALUMNOS</h2>
 </template>
 
 <style scoped></style>
