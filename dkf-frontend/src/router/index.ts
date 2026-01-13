@@ -38,7 +38,7 @@ const router = createRouter({
           components: {
             main: () => import("@/pages/Alumno/empresa.vue"),
           },
-        },        
+        },
         {
           path: "alumno/seguimiento",
           name: "alumno-seguimiento",
@@ -88,7 +88,7 @@ const router = createRouter({
           components: {
             main: () => import("@/pages/TutorEgibide/horario_calendario.vue"),
           },
-        },        
+        },
         {
           path: "tutor-egibide/general",
           name: "tutor_egibide-general",
@@ -211,7 +211,7 @@ router.beforeEach((to) => {
 
   // Si ya está logueado y es ruta de invitado → redirige a dashboard
   if (to.meta.guest && auth.token) {
-    return { name: "dashboard" };
+    return { path: "/" };
   }
 
   // Redirección por defecto según rol cuando entramos a "/"
