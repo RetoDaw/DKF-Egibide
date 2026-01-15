@@ -22,6 +22,7 @@ export const useCompetenciasStore = defineStore("competencias", () => {
     });
 
     const data = await response.json();
+    console.log("Competencias recibidas:", data);
     competencias.value = data as Competencia[];
   }
 
