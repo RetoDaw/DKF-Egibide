@@ -39,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/alumnos', [AlumnosController::class, 'index']);
     Route::post('/alumnos', [AlumnosController::class, 'store']);
     Route::get('/me/alumno', [AlumnosController::class, 'me']);
+    Route::get('/me/nota-cuaderno', [AlumnoController::class, 'notaCuadernoLogeado']);
 
 
     // Seguimientos
