@@ -87,69 +87,25 @@ class AlumnosController extends Controller {
         //
     }
 
-    public function me()
-{
-    $userId = auth()->id();
+    public function me() {
+        $userId = auth()->id();
 
-    $row = Alumnos::join('users', 'alumnos.user_id', '=', 'users.id')
-        ->select(
-            'alumnos.nombre',
-            'alumnos.apellidos',
-            'alumnos.telefono',
-            'alumnos.ciudad',
+        $row = Alumnos::join('users', 'alumnos.user_id', '=', 'users.id')
+            ->select(
+                'alumnos.nombre',
+                'alumnos.apellidos',
+                'alumnos.telefono',
+                'alumnos.ciudad',
 
-            'users.email',
-        )
-        ->where('alumnos.user_id', $userId)
-        ->first();
+                'users.email',
+            )
+            ->where('alumnos.user_id', $userId)
+            ->first();
 
-    if (!$row) {
-        return response()->json(['message' => 'Alumno no encontrado'], 404);
-    }
-
-    return response()->json($row);
-}
-    public function notaCuadernoLogeado(Request $request)
-    {
-    $userId = auth()->user()->id_usuario;
-
-    $row = DB::table('alumnos as a')
-        ->join('estancias as e', 'e.id_alumno', '=', 'a.id_alumno')
-        ->join('cuadernos_practicas as c', 'c.id_estancia', '=', 'e.id_estancia')
-        ->leftJoin('notas_cuaderno as n', 'n.id_cuaderno', '=', 'c.id_cuaderno')
-        ->where('a.id_usuario', $userId)
-        ->orderByDesc('e.fecha_fin')
-        ->select([
-            'n.nota',
-            'e.id_estancia',
-            'e.fecha_fin',
-            'c.id_cuaderno',
-        ])
-        ->first();
         if (!$row) {
-            return response()->json([
-                'nota' => null,
-                'message' => 'No hay cuaderno/estancia para este alumno todavía.'
-            ], 200);
+            return response()->json(['message' => 'Alumno no encontrado'], 404);
         }
 
-        if ($row->fecha_fin > now()->toDateString()) {
-            return response()->json([
-                'nota' => null,
-                'message' => 'La estancia aún no ha finalizado. La nota no está disponible.'
-            ], 200);
-        }
-
-        if ($row->nota === null) {
-            return response()->json([
-                'nota' => null,
-                'message' => 'La estancia ha finalizado, pero aún no hay nota del cuaderno.'
-            ], 200);
-        }
-
-        return response()->json([
-            'nota' => (float) $row->nota,
-            'message' => null
-        ], 200);
+        return response()->json($row);
     }
 }
