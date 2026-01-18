@@ -28,6 +28,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Competencias
     Route::get('/competencias', [CompetenciasController::class, 'index']);
+    Route::get('/competenciasTecnicas/alumno/{alumno_id}', [CompetenciasController::class, 'getCompetenciasTecnicasByAlumno']);
+    Route::post('/competenciasTecnicas/asignar', [CompetenciasController::class, 'storeCompetenciasTecnicasAsignadas']);
     Route::post('/competencia/tecnica', [CompetenciasController::class, 'storeTecnica']);
     Route::post('/competencia/transversal', [CompetenciasController::class, 'storeTransversal']);
 

@@ -32,8 +32,6 @@ class TutorEmpresaController extends Controller {
     }
 
 
-
-
     /**
      * Store a newly created resource in storage.
      */
@@ -69,8 +67,7 @@ class TutorEmpresaController extends Controller {
         //
     }
 
-    public function me(Request $request)
-    {
+    public function me(Request $request) {
         $user = $request->user();
 
         $tutor = TutorEmpresa::where('user_id', $user->id)->first();

@@ -50,7 +50,7 @@ onMounted(async () => {
 
 const verDetalleAlumno = (alumnoId: number) => {
   router.push({
-    name: "DetalleAlumno",
+    name: "tutor_empresa-detalle_alumno",
     params: { alumnoId: alumnoId.toString() },
     query: {
       tipoTutor: props.tipoTutor,

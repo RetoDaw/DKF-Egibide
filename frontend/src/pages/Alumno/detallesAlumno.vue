@@ -15,7 +15,7 @@ const alumno = ref<Alumno | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 
-// Obtener parámetros de la ruta (convertir a número)
+// Obtener parámetros de la ruta
 const alumnoId = Number(route.params.alumnoId);
 const tipoTutor = (route.query.tipoTutor as "egibide" | "empresa") || "empresa";
 const tutorId = route.query.tutorId as string;
@@ -58,9 +58,8 @@ onMounted(async () => {
 
 const irACompetencias = () => {
   router.push({
-    name: "CompetenciasAlumno",
+    name: "tutor_empresa-competencias",
     params: { alumnoId: alumnoId },
-    query: { tipoTutor: tipoTutor, tutorId: tutorId },
   });
 };
 

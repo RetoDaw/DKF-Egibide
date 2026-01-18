@@ -134,7 +134,14 @@ const router = createRouter({
           meta: { role: "tutor_empresa" },
         },
         {
-          path: "tutor-empresa/competencias",
+          name: "tutor_empresa-detalle_alumno",
+          path: "tutor-empresa/alumnos-asignados/:alumnoId",
+          components: {
+            main: () => import("@/pages/Alumno/detallesAlumno.vue"),
+          },
+        },
+        {
+          path: "tutor-empresa/alumnos-asignados/:alumnoId/competencias",
           name: "tutor_empresa-competencias",
           components: {
             main: () => import("@/pages/TutorEmpresa/competencias.vue"),
@@ -148,13 +155,6 @@ const router = createRouter({
             main: () => import("@/pages/TutorEmpresa/calificacion.vue"),
           },
           meta: { role: "tutor_empresa" },
-        },
-        {
-          name: "DetalleAlumno",
-          path: "/alumnos/:alumnoId",
-          components: {
-            main: () => import("@/pages/Alumno/detallesAlumno.vue"),
-          },
         },
 
         // Grupo de rutas para Admin
