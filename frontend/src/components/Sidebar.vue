@@ -29,7 +29,11 @@ export default {
       </div>
 
       <div class="sidebar-section">
-        <h3 class="sidebar-title">Información</h3>
+        <h3>
+          <RouterLink to="/alumno/informacion" class="sidebar-title"
+            >Información</RouterLink
+          >
+        </h3>  
         <ul class="list-unstyled mb-0">
           <li>
             <RouterLink to="/alumno/mis-datos" class="sidebar-item"
