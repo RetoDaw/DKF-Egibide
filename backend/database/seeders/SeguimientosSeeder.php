@@ -19,7 +19,7 @@ class SeguimientosSeeder extends Seeder
             'fecha'         => date('Y-m-d'),
             'descripcion'   => 'Seguimiento realizado para verificar el estado de la estancia.',
             'via'           => 'Presencial',
-            'id_estancia'   => 1, // Asegúrate de que exista
+            'estancia_id'   => 1,
             'created_at'    => now(),
             'updated_at'    => now(),
         ]);
