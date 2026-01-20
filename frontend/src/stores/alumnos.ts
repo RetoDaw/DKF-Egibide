@@ -14,6 +14,44 @@ export const useAlumnosStore = defineStore("alumnos", () => {
   const message = ref<string | null>(null);
   const messageType = ref<"success" | "error">("success");
 
+  const entregas = ref<any[]>([]);
+  const loadingEntregas = ref(false);
+
+  async function fetchMisEntregas() {
+    loadingEntregas.value = true;
+    try {
+      const response = await fetch("http://localhost:8000/api/entregas/mias", {
+        headers: {
+          Authorization: authStore.token ? `Bearer ${authStore.token}` : "",
+          Accept: "application/json",}
+      });
+
+      if (!response.ok) throw new Error();
+      entregas.value = await response.json();
+    } finally {
+      loadingEntregas.value = false;
+    }
+  }
+
+  async function subirEntrega(file: File) {
+    const fd = new FormData();
+    fd.append("archivo", file);
+
+    const response = await fetch("http://localhost:8000/api/entregas", {
+      method: "POST",
+      headers: {
+        Authorization: authStore.token ? `Bearer ${authStore.token}` : "",
+        Accept: "application/json",
+      },
+      body: fd,
+    });
+
+    if (!response.ok) throw new Error();
+
+    const nueva = await response.json();
+    entregas.value.unshift(nueva);
+  }
+
   function setMessage(text: string, type: "success" | "error", timeout = 5000) {
     message.value = text;
     messageType.value = type;
@@ -125,6 +163,10 @@ export const useAlumnosStore = defineStore("alumnos", () => {
     notaCuadernoMsg,
     message,
     messageType,
+    entregas,
+    loadingEntregas,
+    subirEntrega,
+    fetchMisEntregas,
     fetchAlumnos,
     fetchAlumno,
     fetchNotaCuaderno,

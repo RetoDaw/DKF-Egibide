@@ -11,8 +11,10 @@ use App\Http\Controllers\FamiliaProfesionalController;
 use App\Http\Controllers\TutorEgibideController;
 use App\Http\Controllers\TutorEmpresaController;
 use App\Http\Controllers\SeguimientosController;
+use App\Http\Controllers\EntregaController;
 
 Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
+Route::get('/entregas/{entrega}/archivo', [EntregaController::class, 'archivo']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -51,6 +53,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me/alumno', [AlumnosController::class, 'me']);
     Route::get('/me/nota-cuaderno', [AlumnosController::class, 'notaCuadernoLogeado']);
 
+    //Entregas
+    Route::get('/entregas/mias', [EntregaController::class, 'mias']);
+    Route::post('/entregas', [EntregaController::class, 'store']);
+
     // Tutor Egibide
     Route::get('/tutorEgibide/{tutorId}/alumnos', [TutorEgibideController::class, 'getAlumnosByCurrentTutor']);
     Route::get('/me/tutor-egibide', [TutorEgibideController::class, 'me']);
@@ -61,4 +67,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Seguimientos
     Route::get('/seguimientos', [SeguimientosController::class, 'index']);
-});
+}
+);
