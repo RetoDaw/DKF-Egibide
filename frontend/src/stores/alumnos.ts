@@ -209,6 +209,31 @@ export const useAlumnosStore = defineStore("alumnos", () => {
     return true;
   }
 
+  async function guardarNotasEgibideByAlumno(alumno_id: number, nota: number, asignatura_id: number) {
+    const response = await fetch(`http://localhost:8000/api/notas/alumno/egibide/guardar`, {
+      method: "POST",
+      headers: {
+        Authorization: authStore.token ? `Bearer ${authStore.token}` : "",
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({alumno_id, nota, asignatura_id}),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMessage(
+        data.message || "Error desconocido, inténtalo más tarde",
+        "error",
+      );
+      return false;
+    }
+
+    setMessage(data.message || "Nota de Egibide insertada correctamente", "success");
+    return true;
+  }
+
   async function getNotasEgibideByAlumno(alumno_id: number) {
     const response = await fetch(
       `http://localhost:8000/api/notas/alumno/${alumno_id}/egibide`,
@@ -232,6 +257,31 @@ export const useAlumnosStore = defineStore("alumnos", () => {
     }
 
     notasEgibide.value = data as NotaEgibide[];
+    return true;
+  }
+
+  async function guardarNotaCuadernoByAlumno(alumno_id: number, nota: number) {
+    const response = await fetch(`http://localhost:8000/api/notas/alumno/cuaderno/guardar`, {
+      method: "POST",
+      headers: {
+        Authorization: authStore.token ? `Bearer ${authStore.token}` : "",
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({alumno_id, nota}),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMessage(
+        data.message || "Error desconocido, inténtalo más tarde",
+        "error",
+      );
+      return false;
+    }
+
+    setMessage(data.message || "Nota de Egibide insertada correctamente", "success");
     return true;
   }
 
@@ -305,7 +355,9 @@ export const useAlumnosStore = defineStore("alumnos", () => {
     getAsignaturasAlumno,
     createAlumno,
     fetchEntregasAlumno,
+    guardarNotasEgibideByAlumno,
     getNotasEgibideByAlumno,
+    guardarNotaCuadernoByAlumno,
     getNotaCuadernoByAlumno
   };
 });

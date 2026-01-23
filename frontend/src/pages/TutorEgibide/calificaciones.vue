@@ -24,7 +24,11 @@ const notaTransversal = ref<number>(0);
 const notaCuaderno = ref<number | null>(null);
 
 const isLoading = ref(true);
+const editando = ref(false);
 const error = ref<string | null>(null);
+
+// NUEVO: reactive para v-model
+const notasEgibidePorAsignatura = ref<Record<number, number>>({});
 
 // Obtener parámetros de la ruta
 const alumnoId = Number(route.params.alumnoId);
@@ -58,14 +62,18 @@ onMounted(async () => {
     // Obtener notas egibide
     const responseEgibide = await alumnoStore.getNotasEgibideByAlumno(alumnoId);
     if (responseEgibide) {
-      notasEgibide.value = alumnoStore.notasEgibide
+      notasEgibide.value = alumnoStore.notasEgibide;
+
+      // Inicializar reactive para v-model
+      notasEgibide.value.forEach(n => {
+        notasEgibidePorAsignatura.value[n.asignatura_id] = Number(n.nota ?? 0);
+      });
     }
 
     // Obtener nota cuaderno
     await alumnoStore.getNotaCuadernoByAlumno(alumnoId);
-    notaCuaderno.value = alumnoStore.notaCuaderno;
+    notaCuaderno.value = alumnoStore.notaCuaderno ?? 0;
 
-    console.log(notasEgibide.value)
   } catch (error) {
     console.error("Error al cargar alumnos:", error);
   } finally {
@@ -73,23 +81,33 @@ onMounted(async () => {
   }
 });
 
+// Guardado autosave
+const guardarNotaEgibide = async (asignaturaId: number) => {
+  try {
+    const nota = notasEgibidePorAsignatura.value[asignaturaId] ?? 0;;
+
+    await alumnoStore.guardarNotasEgibideByAlumno(alumnoId, nota, asignaturaId);
+  } catch (err) {
+    console.error(err);
+    alert("Error al guardar la nota Egibide");
+  }
+};
+
+const guardarNotaCuaderno = async () => {
+  try {
+    await alumnoStore.guardarNotaCuadernoByAlumno(alumnoId, notaCuaderno.value ?? 0);
+  } catch (err) {
+    console.error(err);
+    alert("Error al guardar la nota del cuaderno");
+  }
+};
+
+// Computeds
 const notasTecnicasPorAsignatura = computed(() => {
   const map: Record<number, number> = {};
-
   notasTecnicas.value.forEach((n) => {
     map[n.asignatura_id] = n.nota_media;
   });
-
-  return map;
-});
-
-const notasEgibidePorAsignatura = computed(() => {
-  const map: Record<number, string> = {};
-
-  notasEgibide.value.forEach(n => {
-    map[n.asignatura_id] = n.nota;
-  });
-
   return map;
 });
 
@@ -97,25 +115,21 @@ const notaFinalPorAsignatura = computed<Record<number, number>>(() => {
   const map: Record<number, number> = {};
 
   asignaturas.value.forEach((asignatura) => {
-    const egibide = Number(notasEgibidePorAsignatura.value[asignatura.id]);
+    const egibide = Number(notasEgibidePorAsignatura.value[asignatura.id] ?? 0);
     const tecnica = notasTecnicasPorAsignatura.value[asignatura.id];
-    const transversal = notaTransversal.value;
+    const transversal = notaTransversal.value ?? 0;
     const cuaderno = notaCuaderno.value ?? 0;
-
-    if (isNaN(egibide)) {
-      map[asignatura.id] = NaN;
-    }
 
     let notaEmpresa: number;
 
-    if(tecnica != null) {
+    if (tecnica != null) {
       notaEmpresa = tecnica * 0.6 + transversal * 0.2 + cuaderno * 0.2;
     } else {
+      // Técnica no existe → 60% pasa al 20% transversal
       notaEmpresa = transversal * 0.8 + cuaderno * 0.2;
     }
 
     const notaFinal = egibide * 0.8 + notaEmpresa * 0.2;
-
     map[asignatura.id] = Math.round(notaFinal * 100) / 100;
   });
 
@@ -127,8 +141,6 @@ const getNotaFinal = (asignaturaId: number) => {
   return isNaN(nota ?? NaN) ? "-" : nota;
 };
 
-
-
 const volver = () => {
   router.back();
 };
@@ -138,6 +150,7 @@ const volverAlumnos = () => {
   router.back();
 };
 </script>
+
 
 <template>
   <Toast v-if="alumnoStore.message" :message="alumnoStore.message" :messageType="alumnoStore.messageType" />
@@ -202,8 +215,17 @@ const volverAlumnos = () => {
 
       <!-- Cabecera del alumno -->
       <div class="card mb-4 shadow-sm">
-        <div class="card-header">
-          <h3 class="mb-1">Calificaciones</h3>
+        <div class="card-header d-flex justify-content-between">
+          <h3>Calificaciones</h3>
+          <div>
+            <button
+              class="btn btn-warning me-2"
+              @click="editando = !editando"
+            >
+              {{ editando ? 'Cancelar Edicion' : 'Editar Calificaciones' }}
+            </button>
+          </div>
+
         </div>
         <div class="card-body">
           <table
@@ -226,13 +248,33 @@ const volverAlumnos = () => {
             <tbody>
               <tr v-for="(asignatura, index) in asignaturas" :key="asignatura.id">
                 <td class="fw-bold">{{ asignatura.codigo_asignatura }}</td>
-                <td>{{ notasEgibidePorAsignatura[asignatura.id] ?? "-" }}</td>
+                <td>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="10"
+                    v-model.number="notasEgibidePorAsignatura[asignatura.id]"
+                    :disabled="!editando"
+                    @blur="guardarNotaEgibide(asignatura.id)"
+                    class="form-control form-control-sm text-center"
+                  />
+                </td>
                 <td>{{ notasTecnicasPorAsignatura[asignatura.id] ?? "-" }}</td>
                 <td v-if="index === 0" :rowspan="asignaturas.length">
                   {{ notaTransversal }}
                 </td>
                 <td v-if="index === 0" :rowspan="asignaturas.length">
-                  {{ notaCuaderno }}
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="10"
+                    v-model.number="notaCuaderno"
+                    :disabled="!editando"
+                    @blur="guardarNotaCuaderno()"
+                    class="form-control form-control-sm text-center"
+                  />
                 </td>
                 <td>{{ getNotaFinal(asignatura.id) }}</td>
 

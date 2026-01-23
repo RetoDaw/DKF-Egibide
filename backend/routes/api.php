@@ -48,7 +48,9 @@ Route::middleware('auth:sanctum')->group(
         Route::get('/notas/alumno/{alumno_id}/tecnicas', [NotasController::class, 'obtenerNotasTecnicas']);
         Route::get('/notas/alumno/{alumno_id}/transversal', [NotasController::class, 'obtenerNotasTransversales']);
         Route::get('/notas/alumno/{alumno_id}/egibide', [NotasController::class, 'obtenerNotasEgibide']);
+        Route::post('/notas/alumno/egibide/guardar', [NotasController::class, 'guardarNotasEgibide']);
         Route::get('/notas/alumno/{alumno_id}/cuaderno', [NotasController::class, 'obtenerNotaCuadernoByAlumno']);
+        Route::post('/notas/alumno/cuaderno/guardar', [NotasController::class, 'guardarNotasCuaderno']);
 
         // Empresas
         Route::get('/empresas', [EmpresasController::class, 'index']);
@@ -74,7 +76,7 @@ Route::middleware('auth:sanctum')->group(
         Route::get('/tutorEgibide/{tutorId}/empresas', [TutorEgibideController::class, 'conseguirEmpresasporTutor']);
         Route::get('/tutorEgibide/empresa/{empresaId}', [TutorEgibideController::class, 'getDetalleEmpresa']);
         Route::get('/me/tutor-egibide', [TutorEgibideController::class, 'me']);
-        Route::post('/horasperiodo', [TutorEgibideController::class, 'horasperiodo']);  
+        Route::post('/horasperiodo', [TutorEgibideController::class, 'horasperiodo']);
 
         // Tutor Empresa
         Route::get('/tutorEmpresa/{tutorId}/alumnos', [TutorEmpresaController::class, 'getAlumnosByCurrentInstructor']);

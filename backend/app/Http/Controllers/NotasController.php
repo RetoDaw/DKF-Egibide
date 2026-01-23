@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CuadernoPracticas;
 use App\Models\Estancia;
 use App\Models\NotaAsignatura;
 use App\Models\NotaCuaderno;
 use App\Services\CalcularNotasCompetenciasTecnicas;
 use App\Services\CalcularNotasCompetenciasTransversales;
+use Illuminate\Http\Request;
 
 class NotasController extends Controller {
     public function obtenerNotasTecnicas($alumnoId, CalcularNotasCompetenciasTecnicas $calcularNotas) {
@@ -33,6 +35,32 @@ class NotasController extends Controller {
         return response()->json($notas);
     }
 
+    public function guardarNotasEgibide(Request $request) {
+        $validated = $request->validate([
+            'alumno_id' => ['required'],
+            'nota' => ['required'],
+            'asignatura_id' => ['required'],
+        ]);
+
+        $year = date("Y");
+
+        NotaAsignatura::updateOrCreate(
+            [
+                'alumno_id' => $validated['alumno_id'],
+                'asignatura_id' => $validated['asignatura_id'],
+                'anio' => $year,
+            ],
+            [
+                'nota' => $validated['nota'],
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Nota egibide agregada correctamente'
+        ], 201);
+    }
+
     public function obtenerNotaCuadernoByAlumno($alumnoId) {
         $estancia = Estancia::where('alumno_id', $alumnoId)->firstOrFail();
 
@@ -41,5 +69,32 @@ class NotasController extends Controller {
         })->firstOrFail('nota');
 
         return response()->json($notaCuaderno);
+    }
+
+    public function guardarNotasCuaderno(Request $request) {
+        $validated = $request->validate([
+            'alumno_id' => ['required'],
+            'nota' => ['required']
+        ]);
+
+        $alumnoId = $validated['alumno_id'];
+
+        $estancia = Estancia::where('alumno_id', $alumnoId)->firstOrFail();
+
+        $cuaderno = CuadernoPracticas::where('estancia_id', $estancia->id)->firstOrFail();
+
+        NotaCuaderno::UpdateOrCreate(
+            [
+                'cuaderno_practicas_id' => $cuaderno->id,
+            ],
+            [
+                'nota' => $validated['nota'],
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Nota egibide agregada correctamente'
+        ], 201);
     }
 }
