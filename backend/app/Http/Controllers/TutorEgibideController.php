@@ -66,6 +66,49 @@ class TutorEgibideController extends Controller {
     }
     
     public function inicioTutor(Request $request)
+{
+    $user = $request->user();
+
+    // Relación: User -> tutorEgibide()
+    $tutor = $user->tutorEgibide;
+
+    if (!$tutor) {
+        return response()->json([
+            'message' => 'El usuario no tiene tutor egibide asociado.'
+        ], 404);
+    }
+
+    $email = $user->email;
+    $hoy = now();
+
+    $alumnosAsignados = $tutor->estancias()
+        ->whereDate('fecha_inicio', '<=', $hoy)
+        ->where(function ($q) use ($hoy) {
+            $q->whereNull('fecha_fin')
+              ->orWhereDate('fecha_fin', '>=', $hoy);
+        })
+        ->whereNotNull('alumno_id')
+        ->distinct()
+        ->count('alumno_id');
+
+    $empresasAsignadas = $tutor->estancias()
+        ->whereDate('fecha_inicio', '<=', $hoy)
+        ->where(function ($q) use ($hoy) {
+            $q->whereNull('fecha_fin')
+              ->orWhereDate('fecha_fin', '>=', $hoy);
+        })
+        ->whereNotNull('empresa_id')
+        ->distinct()
+        ->count('empresa_id');
+
+        return response()->json([
+            'tutor' => [
+                'nombre'    => $tutor->nombre,
+                'apellidos' => $tutor->apellidos,
+                'telefono'  => $tutor->telefono,
+                'ciudad'    => $tutor->ciudad,
+                'email'     => $email,
+    public function inicioTutor(Request $request)
     {
         $user = $request->user();
 
@@ -104,7 +147,6 @@ class TutorEgibideController extends Controller {
             ],
         ]);
     }
-    
     /**
      * Store a newly created resource in storage.
      */

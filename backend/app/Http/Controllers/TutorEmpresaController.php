@@ -32,44 +32,43 @@ class TutorEmpresaController extends Controller {
     }
 
     public function inicioInstructor(Request $request)
-    {
-        $user = $request->user();
+{
+    $user = $request->user();
 
-        $instructor = $user->instructor;
+    $instructor = $user->instructor;
 
-        if (!$instructor) {
-            return response()->json([
-                'message' => 'El usuario no tiene instructor (tutor de empresa) asociado.'
-            ], 404);
-        }
-
-        $email = $user->email;
-
-        $alumnosAsignados = $instructor->estancias()
-            ->whereNotNull('alumno_id')
-            ->distinct('alumno_id')
-            ->count('alumno_id');
-
+    if (!$instructor) {
         return response()->json([
-            'instructor' => [
-                'nombre'    => $instructor->nombre,
-                'apellidos' => $instructor->apellidos,
-                'telefono'  => $instructor->telefono,
-                'ciudad'    => $instructor->ciudad ?? null,
-                'email'     => $email,
-            ],
-            'counts' => [
-                'alumnos_asignados' => $alumnosAsignados,
-            ],
-        ]);
+            'message' => 'El usuario no tiene instructor (tutor de empresa) asociado.'
+        ], 404);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request) {
-        //
-    }
+    $email = $user->email;
+    $hoy = now();
+
+    $alumnosAsignados = $instructor->estancias()
+        ->whereDate('fecha_inicio', '<=', $hoy)
+        ->where(function ($q) use ($hoy) {
+            $q->whereNull('fecha_fin')
+              ->orWhereDate('fecha_fin', '>=', $hoy);
+        })
+        ->whereNotNull('alumno_id')
+        ->distinct()
+        ->count('alumno_id');
+
+    return response()->json([
+        'instructor' => [
+            'nombre'    => $instructor->nombre,
+            'apellidos' => $instructor->apellidos,
+            'telefono'  => $instructor->telefono,
+            'ciudad'    => $instructor->ciudad ?? null,
+            'email'     => $email,
+        ],
+        'counts' => [
+            'alumnos_asignados' => $alumnosAsignados,
+        ],
+    ]);
+}
 
     /**
      * Display the specified resource.
