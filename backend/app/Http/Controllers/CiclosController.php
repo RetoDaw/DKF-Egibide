@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ciclos;
+use App\Models\Curso;
 use Illuminate\Http\Request;
 use App\Services\CicloImportService;
 use Illuminate\Support\Facades\Validator;
@@ -42,7 +43,6 @@ class CiclosController extends Controller {
      * Display the specified resource.
      */
     public function show(Ciclos $ciclo) {
-        // Cargar relación con familia profesional
         $ciclo->load('familiaProfesional');
 
         return response()->json([
@@ -50,15 +50,25 @@ class CiclosController extends Controller {
             'nombre' => $ciclo->nombre,
             'familia_profesional_id' => $ciclo->familia_profesional_id,
             'familia_profesional' => $ciclo->familiaProfesional ? $ciclo->familiaProfesional->nombre : null,
-            // agrega otros campos si los necesitas
         ]);
     }
 
+    public function getCursosByCiclos($ciclo_id) {
+        $ciclo = Ciclos::find($ciclo_id);
+
+        if (!$ciclo) {
+            return response()->json(['message' => 'Ciclo no encontrado'], 404);
+        }
+
+        $cursos = $ciclo->cursos;
+
+        return response()->json($cursos, 200);
+    }
+
     public function importarCSV(Request $request) {
-        // Validar request
         $validator = Validator::make($request->all(), [
             'ciclo_id' => 'required|integer|exists:ciclos,id',
-            'csv_file' => 'required|file|mimes:csv,txt|max:10240' // máx 10MB
+            'csv_file' => 'required|file|mimes:csv,txt|max:10240'
         ]);
 
         if ($validator->fails()) {
@@ -72,7 +82,6 @@ class CiclosController extends Controller {
             $cicloId = $request->input('ciclo_id');
             $file = $request->file('csv_file');
 
-            // Llamar al servicio
             $resultado = $this->importService->importarDesdeCSV($cicloId, $file);
 
             return response()->json([

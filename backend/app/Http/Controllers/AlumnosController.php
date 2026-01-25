@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Alumnos;
-use App\Models\Asignatura;
 use App\Models\Estancia;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -33,7 +32,9 @@ class AlumnosController extends Controller {
             'nombre' => ['required'],
             'apellidos' => ['required'],
             'telefono' => ['required'],
-            'ciudad' => ['required']
+            'ciudad' => ['required'],
+            'curso' => ['required'],
+            'tutor' => ['required']
         ]);
 
         // Generar email y contraseña temporal
@@ -54,6 +55,16 @@ class AlumnosController extends Controller {
             'ciudad' => $validated['ciudad'],
             'telefono' => $validated['telefono'],
             'user_id' => $user->id,
+        ]);
+
+        // ESTANCIA
+        Estancia::create([
+            'puesto' => 'Sin asignar',
+            'fecha_inicio' => now()->subDays(14)->toDateString(),
+            'horas_totales' => 0,
+            'alumno_id' => $alumno->id,
+            'tutor_id' => $validated['tutor'],
+            'curso_id' => $validated['curso'],
         ]);
 
         return response()->json([
@@ -145,34 +156,6 @@ class AlumnosController extends Controller {
         ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Alumnos $alumnos) {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Alumnos $alumnos) {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Alumnos $alumnos) {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Alumnos $alumnos) {
-        //
-    }
-
     public function me() {
         $userId = auth()->id();
 
@@ -193,36 +176,6 @@ class AlumnosController extends Controller {
         }
 
         return response()->json($row);
-    }
-
-    public function notaCuadernoLogeado() {
-        $user = auth()->user();
-        if (!$user) return response()->json(['message' => 'No autenticado'], 401);
-
-        $alumno = $user->alumno;
-        if (!$alumno) {
-            return response()->json(['nota' => null, 'message' => 'Sin alumno asociado'], 200);
-        }
-
-        $estancia = $alumno->estancias()->orderByDesc('fecha_fin')->first();
-        if (!$estancia) {
-            return response()->json(['nota' => null, 'message' => 'No hay estancia para este alumno todavía.'], 200);
-        }
-
-        if ($estancia->fecha_fin && $estancia->fecha_fin > now()->toDateString()) {
-            return response()->json(['nota' => null, 'message' => 'La estancia aún no ha finalizado.'], 200);
-        }
-
-        $cuaderno = $estancia->cuadernoPracticas;
-        if (!$cuaderno) {
-            return response()->json(['nota' => null, 'message' => 'No hay cuaderno asociado.'], 200);
-        }
-        $nota = $cuaderno->nota?->nota;
-
-        return response()->json([
-            'nota' => $nota !== null ? (float) $nota : null,
-            'message' => $nota === null ? 'La estancia ha finalizado, pero aún no hay nota del cuaderno.' : null
-        ], 200);
     }
 
     public function getAsignaturasAlumno($alumno_id) {

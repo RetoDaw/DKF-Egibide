@@ -198,6 +198,8 @@ export const useAlumnosStore = defineStore("alumnos", () => {
     apellidos: string,
     telefono: number,
     ciudad: string,
+    curso: number,
+    tutor: number,
   ) {
     const response = await fetch("http://localhost:8000/api/alumnos", {
       method: "POST",
@@ -206,7 +208,14 @@ export const useAlumnosStore = defineStore("alumnos", () => {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ nombre, apellidos, telefono, ciudad }),
+      body: JSON.stringify({
+        nombre,
+        apellidos,
+        telefono,
+        ciudad,
+        curso,
+        tutor,
+      }),
     });
 
     const data = await response.json();

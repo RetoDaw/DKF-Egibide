@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class FamiliaProfesional extends Model {
@@ -19,7 +20,7 @@ class FamiliaProfesional extends Model {
      * Get the centro that owns this familia profesional
      */
     public function centro(): BelongsToMany {
-        return $this->belongsToMany(Centro::class,'centros_familias','centro_id','familia_id');
+        return $this->belongsToMany(Centro::class, 'centros_familias', 'centro_id', 'familia_id');
     }
 
     /**
@@ -34,5 +35,17 @@ class FamiliaProfesional extends Model {
      */
     public function competenciasTransversales(): HasMany {
         return $this->hasMany(CompetenciaTransversal::class);
+    }
+
+    /**
+     * Get all tutores that owns this familia profesional
+     */
+    public function tutores(): BelongsToMany {
+        return $this->belongsToMany(
+            TutorEgibide::class,
+            'familia_tutor',
+            'familias_profesionales_id',
+            'tutor_id'
+        )->withTimestamps();
     }
 }

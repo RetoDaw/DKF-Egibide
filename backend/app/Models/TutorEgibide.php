@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class TutorEgibide extends Model {
     protected $table = 'tutores';
@@ -38,8 +39,8 @@ class TutorEgibide extends Model {
         return $this->belongsToMany(
             Alumnos::class,
             'estancias',
-            'tutor_id',   // FK en estancias hacia tutores
-            'alumno_id'   // FK en estancias hacia alumnos
+            'tutor_id',
+            'alumno_id'
         )->withPivot([
             'id',
             'puesto',
@@ -50,5 +51,17 @@ class TutorEgibide extends Model {
             'empresa_id',
             'curso_id'
         ])->withTimestamps();
+    }
+
+    /**
+     * Familias profesionales a los que pertenece este tutor
+     */
+    public function familias(): BelongsToMany {
+        return $this->belongsToMany(
+            FamiliaProfesional::class,
+            'familia_tutor',
+            'tutor_id',
+            'familias_profesionales_id'
+        )->withTimestamps();
     }
 }

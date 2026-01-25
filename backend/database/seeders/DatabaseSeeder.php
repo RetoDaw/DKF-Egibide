@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder {
             UserSeeder::class,
             AlumnoSeeder::class,
             TutorSeeder::class,
+            FamiliaTutorSeeder::class,
             InstructorSeeder::class,
 
             AsignaturaSeeder::class,

@@ -1,6 +1,4 @@
-<script setup>
-import UploadCiclosCSV from "@/components/Ciclos/UploadCiclosCSV.vue";
-</script>
+<script setup></script>
 
 <template>
   <h2>Agregar</h2>

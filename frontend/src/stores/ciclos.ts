@@ -2,9 +2,14 @@ import type { Ciclo } from "@/interfaces/Ciclo";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useAuthStore } from "./auth";
+import type { Curso } from "@/interfaces/Curso";
+import type { TutorEgibide } from "@/interfaces/TutorEgibide";
 
 export const useCiclosStore = defineStore("ciclos", () => {
   const ciclos = ref<Ciclo[]>([]);
+  const cursos = ref<Curso[]>([]);
+  const tutores = ref<TutorEgibide[]>([]);
+
   const authStore = useAuthStore();
 
   const message = ref<string | null>(null);
@@ -36,6 +41,40 @@ export const useCiclosStore = defineStore("ciclos", () => {
 
     const data = await response.json();
     ciclos.value = data as Ciclo[];
+  }
+
+  // Obtener los cursos por ciclo
+  async function fetchCursosByCiclos(ciclo_id: number) {
+    const response = await fetch(
+      `http://localhost:8000/api/ciclo/${ciclo_id}/cursos`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: authStore.token ? `Bearer ${authStore.token}` : "",
+          Accept: "application/json",
+        },
+      },
+    );
+
+    const data = await response.json();
+    cursos.value = data as Curso[];
+  }
+
+  // Obtener los tutores por ciclo
+  async function fetchTutoresByCiclos(ciclo_id: number) {
+    const response = await fetch(
+      `http://localhost:8000/api/ciclo/${ciclo_id}/tutores`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: authStore.token ? `Bearer ${authStore.token}` : "",
+          Accept: "application/json",
+        },
+      },
+    );
+
+    const data = await response.json();
+    tutores.value = data as TutorEgibide[];
   }
 
   async function createCiclo(nombre: string, familia_profesional_id: number) {
@@ -114,9 +153,13 @@ export const useCiclosStore = defineStore("ciclos", () => {
 
   return {
     ciclos,
+    cursos,
+    tutores,
     message,
     messageType,
     fetchCiclos,
+    fetchCursosByCiclos,
+    fetchTutoresByCiclos,
     createCiclo,
     getCiclosPorFamilia,
     uploadCSV,

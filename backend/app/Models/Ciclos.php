@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Ciclos extends Model {
-    
+
     protected $table = 'ciclos';
     protected $fillable = [
         'nombre',
@@ -25,7 +25,7 @@ class Ciclos extends Model {
      * Get all cursos for this ciclo
      */
     public function cursos(): HasMany {
-        return $this->hasMany(Curso::class);
+        return $this->hasMany(Curso::class, 'ciclo_id');
     }
 
     /**

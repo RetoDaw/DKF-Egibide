@@ -1,14 +1,48 @@
 <script setup lang="ts">
 import Toast from "@/components/Notification/Toast.vue";
+import type { Curso } from "@/interfaces/Curso";
+import type { TutorEgibide } from "@/interfaces/TutorEgibide";
 import { useAlumnosStore } from "@/stores/alumnos";
-import { ref } from "vue";
+import { useCiclosStore } from "@/stores/ciclos";
+import { onMounted, ref, watch } from "vue";
 
 const alumnoStore = useAlumnosStore();
+const cicloStore = useCiclosStore();
 
 const nombre = ref<string>("");
 const apellidos = ref<string>("");
 const telefono = ref<number>(0);
 const poblacion = ref<string>("");
+const ciclo = ref<number>(0);
+const curso = ref<number>(0);
+const tutor = ref<number>(0);
+
+const listaCiclos = ref<any[]>([]);
+const listaCursos = ref<Curso[]>([]);
+const listaTutores = ref<TutorEgibide[]>([]);
+
+watch(ciclo, async (newVal) => {
+  if (!newVal) {
+    listaCursos.value = [];
+    curso.value = 0;
+
+    listaTutores.value = [];
+    tutor.value = 0;
+    return;
+  }
+  await cicloStore.fetchCursosByCiclos(newVal);
+  listaCursos.value = cicloStore.cursos;
+  curso.value = 0;
+
+  await cicloStore.fetchTutoresByCiclos(newVal);
+  listaTutores.value = cicloStore.tutores;
+  tutor.value = 0;
+});
+
+onMounted(async () => {
+  await cicloStore.fetchCiclos();
+  listaCiclos.value = cicloStore.ciclos;
+});
 
 async function agregarAlumno() {
   let ok = false;
@@ -18,6 +52,8 @@ async function agregarAlumno() {
     apellidos.value,
     telefono.value,
     poblacion.value,
+    curso.value,
+    tutor.value,
   );
 
   if (ok) {
@@ -30,6 +66,9 @@ function resetForms() {
   apellidos.value = "";
   telefono.value = 0;
   poblacion.value = "";
+  ciclo.value = 0;
+  curso.value = 0;
+  tutor.value = 0;
 }
 </script>
 
@@ -41,60 +80,113 @@ function resetForms() {
     :message="alumnoStore.message"
     :messageType="alumnoStore.messageType"
   />
-  <form @submit.prevent="agregarAlumno" class="row-cols-1">
-    <div class="mb-3 col-5">
-      <label for="nombre" class="form-label">Nombre:</label>
-      <input
-        type="text"
-        class="form-control"
-        placeholder="Markel"
-        v-model="nombre"
-        aria-label="nombre"
-        id="nombre"
-        required
-      />
-    </div>
+  <form @submit.prevent="agregarAlumno" class="row">
+    <div class="col">
+      <div class="row-cols-1">
+        <div class="mb-3 col-10">
+          <label for="nombre" class="form-label">Nombre:</label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Markel"
+            v-model="nombre"
+            aria-label="nombre"
+            id="nombre"
+            required
+          />
+        </div>
 
-    <div class="mb-3 col-5">
-      <label for="apellido" class="form-label">Apellidos:</label>
-      <input
-        type="text"
-        class="form-control"
-        placeholder="Goikoetxea"
-        v-model="apellidos"
-        aria-label="apellido"
-        id="apellido"
-        required
-      />
-    </div>
+        <div class="mb-3 col-10">
+          <label for="apellido" class="form-label">Apellidos:</label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Goikoetxea"
+            v-model="apellidos"
+            aria-label="apellido"
+            id="apellido"
+            required
+          />
+        </div>
 
-    <div class="mb-3 col-2">
-      <label for="telefono" class="form-label">Telefono:</label>
-      <input
-        type="tel"
-        class="form-control"
-        placeholder="644202601"
-        v-model="telefono"
-        aria-label="telefono"
-        id="telefono"
-        required
-      />
-    </div>
+        <div class="mb-3 col-4">
+          <label for="telefono" class="form-label">Telefono:</label>
+          <input
+            type="tel"
+            class="form-control"
+            placeholder="644202601"
+            v-model="telefono"
+            aria-label="telefono"
+            id="telefono"
+            required
+          />
+        </div>
 
-    <div class="mb-3 col-5">
-      <label for="poblacion" class="form-label">Población:</label>
-      <input
-        type="text"
-        class="form-control"
-        placeholder="Vitoria-Gasteiz, Agurain..."
-        v-model="poblacion"
-        aria-label="poblacion"
-        id="poblacion"
-        required
-      />
+        <div class="mb-3 col-10">
+          <label for="poblacion" class="form-label">Población:</label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Vitoria-Gasteiz, Agurain..."
+            v-model="poblacion"
+            aria-label="poblacion"
+            id="poblacion"
+            required
+          />
+        </div>
+      </div>
     </div>
+    <div class="col">
+      <div class="row-cols-1">
+        <div class="mb-3 col-8">
+          <label for="ciclo" class="form-label">Ciclo:</label>
+          <select
+            class="form-select"
+            v-model.number="ciclo"
+            id="ciclo"
+            required
+          >
+            <option :value="0" disabled>-- Selecciona una opción --</option>
+            <option v-for="c in listaCiclos" :key="c.id" :value="c.id">
+              {{ c.nombre }}
+            </option>
+          </select>
+        </div>
 
-    <button type="submit" class="btn btn-primary col-2">Agregar</button>
+        <div class="mb-3 col-8">
+          <label for="curso" class="form-label">Curso:</label>
+          <select
+            class="form-select"
+            v-model.number="curso"
+            id="curso"
+            required
+          >
+            <option :value="0" disabled>-- Selecciona una opción --</option>
+            <option v-for="c in listaCursos" :key="c.id" :value="c.id">
+              {{ c.numero }}
+            </option>
+          </select>
+        </div>
+
+        <div class="mb-3 col-8">
+          <label for="tutor" class="form-label">Tutor:</label>
+          <select
+            class="form-select"
+            v-model.number="tutor"
+            id="tutor"
+            required
+          >
+            <option :value="0" disabled>-- Selecciona una opción --</option>
+            <option v-for="t in listaTutores" :key="t.id" :value="t.id">
+              {{ t.nombre }} {{ t.apellidos }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="row justify-content-center">
+      <button type="submit" class="btn btn-primary col-2">Agregar</button>
+    </div>
   </form>
 </template>
 

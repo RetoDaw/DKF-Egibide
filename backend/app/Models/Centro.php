@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Centro extends Model {
@@ -15,6 +16,6 @@ class Centro extends Model {
    * Get all familia profesional for the centro
    */
   public function familiasProfesionales(): BelongsToMany {
-    return $this->belongsToMany(FamiliaProfesional::class,'centros_familias','centro_id','familia_id');
+    return $this->belongsToMany(FamiliaProfesional::class, 'centros_familias', 'centro_id', 'familia_id');
   }
 }

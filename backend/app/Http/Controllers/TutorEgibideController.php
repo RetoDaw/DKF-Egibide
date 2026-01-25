@@ -2,26 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Ciclos;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use App\Models\TutorEgibide;
 use App\Models\Estancia;
-use App\Models\Empresas; 
+use App\Models\Empresas;
 
 
 class TutorEgibideController extends Controller {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index() {
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create() {
-        //
-    }
 
     public function getAlumnosByCurrentTutor(Request $request) {
         $userId = $request->user()->id;
@@ -39,7 +28,7 @@ class TutorEgibideController extends Controller {
         $tutor = TutorEgibide::where('user_id', $userId)->firstOrFail();
 
         // Obtener empresas únicas a través de las estancias
-        $empresas = Empresas::whereHas('estancias', function($query) use ($tutor) {
+        $empresas = Empresas::whereHas('estancias', function ($query) use ($tutor) {
             $query->where('tutor_id', $tutor->id);
         })->get();
 
@@ -49,55 +38,65 @@ class TutorEgibideController extends Controller {
     public function getDetalleEmpresa(Request $request, $empresaId) {
         $userId = $request->user()->id;
         $tutor = TutorEgibide::where('user_id', $userId)->firstOrFail();
-        
+
         // Obtener empresa con instructor
-        $empresa = Empresas::with(['instructores' => function($query) use ($tutor) {
-            $query->whereHas('estancias', function($q) use ($tutor) {
+        $empresa = Empresas::with(['instructores' => function ($query) use ($tutor) {
+            $query->whereHas('estancias', function ($q) use ($tutor) {
                 $q->where('tutor_id', $tutor->id);
             });
         }])
-        ->where('id', $empresaId)
-        ->whereHas('estancias', function($query) use ($tutor) {
-            $query->where('tutor_id', $tutor->id);
-        })
-        ->firstOrFail();
-        
+            ->where('id', $empresaId)
+            ->whereHas('estancias', function ($query) use ($tutor) {
+                $query->where('tutor_id', $tutor->id);
+            })
+            ->firstOrFail();
+
         return response()->json($empresa);
     }
-    
-    public function inicioTutor(Request $request){
-    $user = $request->user();
 
-    $tutor = $user->tutorEgibide;
+    public function getTutoresByCiclo($ciclo_id) {
+        $ciclo = Ciclos::find($ciclo_id);
+        if (!$ciclo) return response()->json([], 404);
 
-    if (!$tutor) {
-        return response()->json([
-            'message' => 'El usuario no tiene tutor egibide asociado.'
-        ], 404);
+        $familia = $ciclo->familiaProfesional;
+        $tutores = $familia?->tutores ?? collect();
+
+        return response()->json($tutores, 200);
     }
 
-    $email = $user->email;
-    $hoy = now();
+    public function inicioTutor(Request $request) {
+        $user = $request->user();
 
-    $alumnosAsignados = $tutor->estancias()
-        ->whereDate('fecha_inicio', '<=', $hoy)
-        ->where(function ($q) use ($hoy) {
-            $q->whereNull('fecha_fin')
-              ->orWhereDate('fecha_fin', '>=', $hoy);
-        })
-        ->whereNotNull('alumno_id')
-        ->distinct()
-        ->count('alumno_id');
+        $tutor = $user->tutorEgibide;
 
-    $empresasAsignadas = $tutor->estancias()
-        ->whereDate('fecha_inicio', '<=', $hoy)
-        ->where(function ($q) use ($hoy) {
-            $q->whereNull('fecha_fin')
-              ->orWhereDate('fecha_fin', '>=', $hoy);
-        })
-        ->whereNotNull('empresa_id')
-        ->distinct()
-        ->count('empresa_id');
+        if (!$tutor) {
+            return response()->json([
+                'message' => 'El usuario no tiene tutor egibide asociado.'
+            ], 404);
+        }
+
+        $email = $user->email;
+        $hoy = now();
+
+        $alumnosAsignados = $tutor->estancias()
+            ->whereDate('fecha_inicio', '<=', $hoy)
+            ->where(function ($q) use ($hoy) {
+                $q->whereNull('fecha_fin')
+                    ->orWhereDate('fecha_fin', '>=', $hoy);
+            })
+            ->whereNotNull('alumno_id')
+            ->distinct()
+            ->count('alumno_id');
+
+        $empresasAsignadas = $tutor->estancias()
+            ->whereDate('fecha_inicio', '<=', $hoy)
+            ->where(function ($q) use ($hoy) {
+                $q->whereNull('fecha_fin')
+                    ->orWhereDate('fecha_fin', '>=', $hoy);
+            })
+            ->whereNotNull('empresa_id')
+            ->distinct()
+            ->count('empresa_id');
 
         return response()->json([
             'tutor' => [
@@ -113,44 +112,9 @@ class TutorEgibideController extends Controller {
             ],
         ]);
     }
-    
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request) {
-        //
-    }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(TutorEgibide $tutorEgibide) {
-        //
-    }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(TutorEgibide $tutorEgibide) {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, TutorEgibide $tutorEgibide) {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(TutorEgibide $tutorEgibide) {
-        //
-    }
-
-    public function me(Request $request)
-    {
+    public function me(Request $request) {
         $user = $request->user();
 
         $tutor = TutorEgibide::where('user_id', $user->id)->first();
@@ -164,11 +128,10 @@ class TutorEgibideController extends Controller {
         ]);
     }
 
-     /**
+    /**
      * Guardar o actualizar horario y calendario de una estancia.
      */
-    public function horasperiodo(Request $request)
-    {
+    public function horasperiodo(Request $request) {
         // Validar los datos
         $validated = $request->validate([
             'alumno_id'     => 'required|exists:alumnos,id',
@@ -198,7 +161,6 @@ class TutorEgibideController extends Controller {
                 'message' => 'Horario y calendario guardados correctamente',
                 'estancia' => $estancia,
             ], 201);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
