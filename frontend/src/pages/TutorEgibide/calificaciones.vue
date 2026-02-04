@@ -149,6 +149,12 @@ const volverAlumnos = () => {
   router.back();
   router.back();
 };
+const setNotaEgibide = (asignaturaId: number, e: Event) => {
+  let v = Number((e.target as HTMLInputElement).value);
+  if (isNaN(v)) v = 0;
+  v = Math.min(10, Math.max(0, v));
+  notasEgibidePorAsignatura.value[asignaturaId] = v;
+};
 </script>
 
 
@@ -254,6 +260,7 @@ const volverAlumnos = () => {
                     step="0.01"
                     min="0"
                     max="10"
+                    @input="setNotaEgibide(asignatura.id, $event)"
                     v-model.number="notasEgibidePorAsignatura[asignatura.id]"
                     :disabled="!editando"
                     @blur="guardarNotaEgibide(asignatura.id)"

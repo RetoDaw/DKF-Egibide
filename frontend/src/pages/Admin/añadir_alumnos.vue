@@ -45,6 +45,7 @@ onMounted(async () => {
 });
 
 async function agregarAlumno() {
+
   let ok = false;
 
   ok = await alumnoStore.createAlumno(
@@ -92,6 +93,7 @@ function resetForms() {
             v-model="nombre"
             aria-label="nombre"
             id="nombre"
+            pattern="^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*$"
             required
           />
         </div>
@@ -105,6 +107,7 @@ function resetForms() {
             v-model="apellidos"
             aria-label="apellido"
             id="apellido"
+            pattern="^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*$"
             required
           />
         </div>
@@ -118,6 +121,7 @@ function resetForms() {
             v-model="telefono"
             aria-label="telefono"
             id="telefono"
+            pattern="^\d{9}$"
             required
           />
         </div>

@@ -54,6 +54,7 @@ function resetForms() {
         v-model="cif"
         aria-label="Cif"
         id="cif"
+        pattern="^[A-Z]\d{8}$"
         required
       />
     </div>
@@ -66,6 +67,7 @@ function resetForms() {
         placeholder="Empresa S.A"
         v-model="nombre"
         aria-label="nombre"
+        pattern="^[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ.\s]*$"
         id="nombre"
         required
       />
@@ -78,6 +80,7 @@ function resetForms() {
         class="form-control"
         placeholder="945 000 000"
         v-model="telefono"
+        pattern="^\d{9}$"
         aria-label="Telefono"
         id="telefono"
         required
