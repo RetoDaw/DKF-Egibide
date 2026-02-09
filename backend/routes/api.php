@@ -60,7 +60,7 @@ Route::middleware('auth:sanctum')->group(
         // Empresas
         Route::get('/empresas', [EmpresasController::class, 'index']);
         Route::post('/empresas', [EmpresasController::class, 'store']);
-        Route::get('/me/empresas', [EmpresasController::class, 'miEmpresa']);
+        Route::get('/me/empresa', [EmpresasController::class, 'miEmpresa']);
         Route::post('/empresas/asignar', [EmpresasController::class, 'storeEmpresaAsignada']);
 
         // Alumnos
