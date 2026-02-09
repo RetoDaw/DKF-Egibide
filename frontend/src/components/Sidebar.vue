@@ -183,6 +183,11 @@ const userId = computed(() => authStore.currentUser.id);
               >Alumno</RouterLink
             >
           </li>
+             <li>
+            <RouterLink to="/admin/importar" class="sidebar-item"
+              >Importar</RouterLink
+            >
+          </li>
         </ul>
       </div>
     </nav>
