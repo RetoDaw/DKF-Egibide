@@ -9,15 +9,10 @@ return new class extends Migration {
      * Run the migrations.
      */
     public function up(): void {
-        Schema::create('alumnos', function (Blueprint $table) {
+        Schema::create('curso_tutor', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre', 100);
-            $table->string('apellidos', 150);
-            $table->string('telefono', 20)->nullable();
-            $table->string('ciudad', 120)->nullable();
-
-            $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
-
+            $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade');
+            $table->foreignId('tutor_id')->constrained('tutores')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -26,6 +21,6 @@ return new class extends Migration {
      * Reverse the migrations.
      */
     public function down(): void {
-        Schema::dropIfExists('alumnos');
+        Schema::dropIfExists('curso_tutor');
     }
 };

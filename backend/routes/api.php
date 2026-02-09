@@ -14,7 +14,7 @@ use App\Http\Controllers\TutorEmpresaController;
 use App\Http\Controllers\SeguimientosController;
 use App\Http\Controllers\EntregaController;
 use App\Http\Controllers\AdminController;
-
+use App\Http\Controllers\ImportacionController;
 Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
 Route::get('/entregas/{entrega}/archivo', [EntregaController::class, 'archivo']);
 
@@ -23,7 +23,7 @@ Route::middleware('auth:sanctum')->group(
         Route::get('/user', function (Request $request) {
             return $request->user();
         });
-
+        Route::post('/importar-datos', [ImportacionController::class, 'upload']);
         // Familias Profesionales
         Route::get('/familiasProfesionales', [FamiliaProfesionalController::class, 'index']);
 
@@ -60,7 +60,7 @@ Route::middleware('auth:sanctum')->group(
         // Empresas
         Route::get('/empresas', [EmpresasController::class, 'index']);
         Route::post('/empresas', [EmpresasController::class, 'store']);
-        Route::get('/me/empresas', [EmpresasController::class, 'miEmpresa']);
+        Route::get('/me/empresa', [EmpresasController::class, 'miEmpresa']);
         Route::post('/empresas/asignar', [EmpresasController::class, 'storeEmpresaAsignada']);
 
         // Alumnos
@@ -78,7 +78,9 @@ Route::middleware('auth:sanctum')->group(
 
         // Tutor Egibide
         Route::get('/tutorEgibide/inicio', [TutorEgibideController::class, 'inicioTutor']);
-        Route::get('/tutorEgibide/empresa/{empresaId}', [TutorEgibideController::class, 'getDetalleEmpresa']);
+        Route::get('/tutorEgibide/empresas/{empresaId}', [TutorEgibideController::class, 'getDetalleEmpresa']);
+        Route::get('/tutorEgibide/{tutorId}/cursos/alumnos', [TutorEgibideController::class, 'getMisCursosConAlumnosSinTutor']);
+        Route::post('/tutorEgibide/asignarAlumno', [TutorEgibideController::class, 'asignarAlumno']);
         Route::get('/tutorEgibide/{tutorId}/alumnos', [TutorEgibideController::class, 'getAlumnosByCurrentTutor']);
         Route::get('/tutorEgibide/{tutorId}/empresas', [TutorEgibideController::class, 'conseguirEmpresasporTutor']);
         Route::get('/me/tutor-egibide', [TutorEgibideController::class, 'me']);
