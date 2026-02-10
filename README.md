@@ -14,7 +14,7 @@ ADMIN:
 - Añadir en el formulario de Ciclo el campo Código.
 - Crear RA
 - Borrar tabla Cursos
-
+- Arreglar tutor_egibide al crear alumno
 # 🎓 Dual Kudeatzailea · Egibide
 
 Aplicación web para la **gestión y seguimiento de la Formación Dual** en Egibide.  
