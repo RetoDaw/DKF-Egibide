@@ -168,6 +168,11 @@ const userId = computed(() => authStore.currentUser.id);
               >Ciclo</RouterLink
             >
           </li>
+           <li>
+            <RouterLink to="/admin/nuevo-resultado" class="sidebar-item"
+              >Resultado de Aprendizaje</RouterLink
+            >
+          </li>
           <li>
             <RouterLink to="/admin/nueva-competencia" class="sidebar-item"
               >Competencia</RouterLink
