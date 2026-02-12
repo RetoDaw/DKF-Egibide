@@ -14,6 +14,9 @@ class Ciclos extends Model {
     protected $fillable = [
         'nombre',
         'grupo',
+        'descripcion',
+        'modelo',
+        'regimen',
         'familia_profesional_id'
     ];
 
