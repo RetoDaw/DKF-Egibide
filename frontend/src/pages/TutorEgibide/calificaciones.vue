@@ -27,7 +27,7 @@ const isLoading = ref(true);
 const editando = ref(false);
 const error = ref<string | null>(null);
 
-// NUEVO: reactive para v-model
+// reactive para v-model
 const notasEgibidePorAsignatura = ref<Record<number, number>>({});
 
 // Obtener parámetros de la ruta
@@ -37,33 +37,29 @@ onMounted(async () => {
   try {
     // Buscar el alumno
     alumno.value =
-      tutorEgibideStore.alumnosAsignados.find((a: Alumno) => {
-        return Number(a.id) === alumnoId;
-      }) || null;
+      tutorEgibideStore.alumnosAsignados.find((a: Alumno) => Number(a.id) === alumnoId) || null;
 
     if (!alumno.value) {
       error.value = "Alumno no encontrado";
+      return;
     }
 
     // Obtener asignaturas
     await alumnoStore.getAsignaturasAlumno(alumnoId);
-    asignaturas.value = alumnoStore.asignaturas;
+    asignaturas.value = alumnoStore.asignaturas ?? [];
 
-    // Obtener y calcular nota tecnica
-    const response =
-      await competenciasStore.calcularNotasTecnicasByAlumno(alumnoId);
-    notasTecnicas.value = response.notas_competenciasTec;
+    // Obtener y calcular nota técnica
+    const response = await competenciasStore.calcularNotasTecnicasByAlumno(alumnoId);
+    notasTecnicas.value = response.notas_competenciasTec ?? [];
 
     // Obtener nota transversal
-    const responseTrans =
-      await competenciasStore.getNotaTransversalByAlumno(alumnoId);
-    notaTransversal.value = responseTrans.nota_media;
+    const responseTrans = await competenciasStore.getNotaTransversalByAlumno(alumnoId);
+    notaTransversal.value = responseTrans?.nota_media ?? 0;
 
     // Obtener notas egibide
     const responseEgibide = await alumnoStore.getNotasEgibideByAlumno(alumnoId);
     if (responseEgibide) {
-      notasEgibide.value = alumnoStore.notasEgibide;
-
+      notasEgibide.value = alumnoStore.notasEgibide ?? [];
       // Inicializar reactive para v-model
       notasEgibide.value.forEach(n => {
         notasEgibidePorAsignatura.value[n.asignatura_id] = Number(n.nota ?? 0);
@@ -74,8 +70,9 @@ onMounted(async () => {
     await alumnoStore.getNotaCuadernoByAlumno(alumnoId);
     notaCuaderno.value = alumnoStore.notaCuaderno ?? 0;
 
-  } catch (error) {
-    console.error("Error al cargar alumnos:", error);
+  } catch (err) {
+    console.error("Error al cargar alumnos:", err);
+    error.value = "Error al cargar las calificaciones";
   } finally {
     isLoading.value = false;
   }
@@ -84,8 +81,7 @@ onMounted(async () => {
 // Guardado autosave
 const guardarNotaEgibide = async (asignaturaId: number) => {
   try {
-    const nota = notasEgibidePorAsignatura.value[asignaturaId] ?? 0;;
-
+    const nota = notasEgibidePorAsignatura.value[asignaturaId] ?? 0;
     await alumnoStore.guardarNotasEgibideByAlumno(alumnoId, nota, asignaturaId);
   } catch (err) {
     console.error(err);
@@ -103,20 +99,19 @@ const guardarNotaCuaderno = async () => {
 };
 
 // Computeds
-const notasTecnicasPorAsignatura = computed(() => {
+const notasTecnicasPorAsignatura = computed<Record<number, number>>(() => {
   const map: Record<number, number> = {};
-  notasTecnicas.value.forEach((n) => {
-    map[n.asignatura_id] = n.nota_media;
+  (notasTecnicas.value ?? []).forEach((n) => {
+    map[n.asignatura_id] = Number(n.nota_media ?? 0);
   });
   return map;
 });
 
 const notaFinalPorAsignatura = computed<Record<number, number>>(() => {
   const map: Record<number, number> = {};
-
-  asignaturas.value.forEach((asignatura) => {
+  (asignaturas.value ?? []).forEach((asignatura) => {
     const egibide = Number(notasEgibidePorAsignatura.value[asignatura.id] ?? 0);
-    const tecnica = notasTecnicasPorAsignatura.value[asignatura.id];
+    const tecnica = notasTecnicasPorAsignatura.value[asignatura.id] ?? 0;
     const transversal = notaTransversal.value ?? 0;
     const cuaderno = notaCuaderno.value ?? 0;
 
@@ -125,7 +120,6 @@ const notaFinalPorAsignatura = computed<Record<number, number>>(() => {
     if (tecnica != null) {
       notaEmpresa = tecnica * 0.6 + transversal * 0.2 + cuaderno * 0.2;
     } else {
-      // Técnica no existe → 60% pasa al 20% transversal
       notaEmpresa = transversal * 0.8 + cuaderno * 0.2;
     }
 
@@ -137,18 +131,13 @@ const notaFinalPorAsignatura = computed<Record<number, number>>(() => {
 });
 
 const getNotaFinal = (asignaturaId: number) => {
-  const nota = notaFinalPorAsignatura.value[asignaturaId];
-  return isNaN(nota ?? NaN) ? "-" : nota;
+  const nota = notaFinalPorAsignatura.value?.[asignaturaId] ?? 0;
+  return isNaN(nota) ? "-" : nota;
 };
 
-const volver = () => {
-  router.back();
-};
+const volver = () => router.back();
+const volverAlumnos = () => { router.back(); router.back(); };
 
-const volverAlumnos = () => {
-  router.back();
-  router.back();
-};
 const setNotaEgibide = (asignaturaId: number, e: Event) => {
   let v = Number((e.target as HTMLInputElement).value);
   if (isNaN(v)) v = 0;
@@ -156,7 +145,6 @@ const setNotaEgibide = (asignaturaId: number, e: Event) => {
   notasEgibidePorAsignatura.value[asignaturaId] = v;
 };
 </script>
-
 
 <template>
   <Toast v-if="alumnoStore.message" :message="alumnoStore.message" :messageType="alumnoStore.messageType" />
@@ -171,41 +159,27 @@ const setNotaEgibide = (asignaturaId: number, e: Event) => {
     </div>
 
     <!-- Error -->
-    <div
-      v-else-if="error"
-      class="alert alert-danger d-flex align-items-center"
-      role="alert"
-    >
+    <div v-else-if="error" class="alert alert-danger d-flex align-items-center" role="alert">
       <i class="bi bi-exclamation-triangle-fill me-2"></i>
       <div>
         {{ error }}
-        <button class="btn btn-sm btn-outline-danger ms-3" @click="volver">
-          Volver a alumno
-        </button>
+        <button class="btn btn-sm btn-outline-danger ms-3" @click="volver">Volver a alumno</button>
       </div>
     </div>
 
     <!-- Sin alumno -->
     <div v-else-if="!alumno" class="alert alert-warning">
       No se ha encontrado el alumno
-      <button class="btn btn-sm btn-outline-warning ms-3" @click="volver">
-        Volver
-      </button>
+      <button class="btn btn-sm btn-outline-warning ms-3" @click="volver">Volver</button>
     </div>
 
     <!-- Contenido principal -->
     <div v-else>
-      <!-- Breadcrumb -->
       <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
           <li class="breadcrumb-item">
-            <a
-              href="#"
-              @click.prevent="volverAlumnos"
-              class="text-decoration-none"
-            >
-              <i class="bi bi-arrow-left"></i>
-              Alumnos
+            <a href="#" @click.prevent="volverAlumnos" class="text-decoration-none">
+              <i class="bi bi-arrow-left"></i> Alumnos
             </a>
           </li>
           <li class="breadcrumb-item">
@@ -213,31 +187,21 @@ const setNotaEgibide = (asignaturaId: number, e: Event) => {
               {{ alumno.nombre }} {{ alumno.apellidos }}
             </a>
           </li>
-          <li class="breadcrumb-item active" aria-current="page">
-            Calificaciones
-          </li>
+          <li class="breadcrumb-item active" aria-current="page">Calificaciones</li>
         </ol>
       </nav>
 
-      <!-- Cabecera del alumno -->
       <div class="card mb-4 shadow-sm">
         <div class="card-header d-flex justify-content-between">
           <h3>Calificaciones</h3>
           <div>
-            <button
-              class="btn btn-warning me-2"
-              @click="editando = !editando"
-            >
+            <button class="btn btn-warning me-2" @click="editando = !editando">
               {{ editando ? 'Cancelar Edicion' : 'Editar Calificaciones' }}
             </button>
           </div>
-
         </div>
         <div class="card-body">
-          <table
-            v-if="asignaturas.length"
-            class="table table-bordered text-center align-middle border-primary shadow"
-          >
+          <table v-if="asignaturas.length" class="table table-bordered text-center align-middle border-primary shadow">
             <thead>
               <tr>
                 <th rowspan="2" class="bg-primary"></th>
@@ -251,15 +215,16 @@ const setNotaEgibide = (asignaturaId: number, e: Event) => {
                 <th class="bg-secondary text-light">Cuaderno <br> 20%</th>
               </tr>
             </thead>
-            
+
             <tbody>
               <tr v-for="(asignatura, index) in asignaturas" :key="asignatura.id">
                 <td class="fw-bold">{{ asignatura.codigo_asignatura }}</td>
                 <td>
-                  <span v-if="!editando">{{ notasEgibidePorAsignatura[asignatura.id] }}</span>
+                  <span v-if="!editando">
+                    {{ notasEgibidePorAsignatura[asignatura.id] }}
+                  </span>
                   <input
                     v-else
-                    style="background-color: white;"
                     type="number"
                     step="0.01"
                     min="0"
@@ -268,17 +233,15 @@ const setNotaEgibide = (asignaturaId: number, e: Event) => {
                     v-model.number="notasEgibidePorAsignatura[asignatura.id]"
                     @blur="guardarNotaEgibide(asignatura.id)"
                     class="form-control form-control-sm text-center"
+                    style="background-color: white;"
                   />
                 </td>
                 <td>{{ notasTecnicasPorAsignatura[asignatura.id] ?? "-" }}</td>
-                <td v-if="index === 0" :rowspan="asignaturas.length">
-                  {{ notaTransversal }}
-                </td>
+                <td v-if="index === 0" :rowspan="asignaturas.length">{{ notaTransversal }}</td>
                 <td v-if="index === 0" :rowspan="asignaturas.length">
                   <span v-if="!editando">{{ notaCuaderno }}</span>
                   <input
                     v-else
-                    style="background-color: white;"
                     type="number"
                     step="0.01"
                     min="0"
@@ -287,19 +250,17 @@ const setNotaEgibide = (asignaturaId: number, e: Event) => {
                     :disabled="!editando"
                     @blur="guardarNotaCuaderno()"
                     class="form-control form-control-sm text-center"
+                    style="background-color: white;"
                   />
                 </td>
                 <td>{{ getNotaFinal(asignatura.id) }}</td>
-
               </tr>
             </tbody>
           </table>
 
           <div v-else class="alert alert-warning">
             Este alumno no tiene calificaciones
-            <button class="btn btn-sm btn-outline-warning ms-3" @click="volver">
-              Volver
-            </button>
+            <button class="btn btn-sm btn-outline-warning ms-3" @click="volver">Volver</button>
           </div>
         </div>
       </div>
