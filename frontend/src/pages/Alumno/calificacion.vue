@@ -5,15 +5,18 @@ import type { Asignatura } from "@/interfaces/Asignatura";
 import type { NotaCompetenciaTecnica, NotaEgibide } from "@/interfaces/Notas";
 import { useAlumnosStore } from "@/stores/alumnos";
 import { useCompetenciasStore } from "@/stores/competencias";
+import { useTutorEgibideStore } from "@/stores/tutorEgibide";
 import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import router from "@/router";
 
 const route = useRoute();
+const router = useRouter();
 
+const tutorEgibideStore = useTutorEgibideStore();
 const alumnoStore = useAlumnosStore();
 const competenciasStore = useCompetenciasStore();
 
+const alumno = ref<Alumno | null>(null);
 const asignaturas = ref<Asignatura[]>([]);
 const notasEgibide = ref<NotaEgibide[]>([]);
 const notasTecnicas = ref<NotaCompetenciaTecnica[]>([]);
@@ -24,7 +27,7 @@ const isLoading = ref(true);
 const editando = ref(false);
 const error = ref<string | null>(null);
 
-// NUEVO: reactive para v-model
+// reactive para v-model
 const notasEgibidePorAsignatura = ref<Record<number, number>>({});
 
 // Obtener parámetros de la ruta
@@ -32,26 +35,31 @@ const alumnoId = Number(route.params.alumnoId);
 
 onMounted(async () => {
   try {
+    // Buscar el alumno
+    alumno.value =
+      tutorEgibideStore.alumnosAsignados.find((a: Alumno) => Number(a.id) === alumnoId) || null;
+
+    if (!alumno.value) {
+      error.value = "Alumno no encontrado";
+      return;
+    }
 
     // Obtener asignaturas
     await alumnoStore.getAsignaturasAlumno(alumnoId);
-    asignaturas.value = alumnoStore.asignaturas;
+    asignaturas.value = alumnoStore.asignaturas ?? [];
 
-    // Obtener y calcular nota tecnica
-    const response =
-      await competenciasStore.calcularNotasTecnicasByAlumno(alumnoId);
-    notasTecnicas.value = response.notas_competenciasTec;
+    // Obtener y calcular nota técnica
+    const response = await competenciasStore.calcularNotasTecnicasByAlumno(alumnoId);
+    notasTecnicas.value = response.notas_competenciasTec ?? [];
 
     // Obtener nota transversal
-    const responseTrans =
-      await competenciasStore.getNotaTransversalByAlumno(alumnoId);
-    notaTransversal.value = responseTrans.nota_media;
+    const responseTrans = await competenciasStore.getNotaTransversalByAlumno(alumnoId);
+    notaTransversal.value = responseTrans?.nota_media ?? 0;
 
     // Obtener notas egibide
     const responseEgibide = await alumnoStore.getNotasEgibideByAlumno(alumnoId);
     if (responseEgibide) {
-      notasEgibide.value = alumnoStore.notasEgibide;
-
+      notasEgibide.value = alumnoStore.notasEgibide ?? [];
       // Inicializar reactive para v-model
       notasEgibide.value.forEach(n => {
         notasEgibidePorAsignatura.value[n.asignatura_id] = Number(n.nota ?? 0);
@@ -62,28 +70,48 @@ onMounted(async () => {
     await alumnoStore.getNotaCuadernoByAlumno(alumnoId);
     notaCuaderno.value = alumnoStore.notaCuaderno ?? 0;
 
-  } catch (error) {
-    console.error("Error al cargar alumnos:", error);
+  } catch (err) {
+    console.error("Error al cargar alumnos:", err);
+    error.value = "Error al cargar las calificaciones";
   } finally {
     isLoading.value = false;
   }
 });
 
+// Guardado autosave
+const guardarNotaEgibide = async (asignaturaId: number) => {
+  try {
+    const nota = notasEgibidePorAsignatura.value[asignaturaId] ?? 0;
+    await alumnoStore.guardarNotasEgibideByAlumno(alumnoId, nota, asignaturaId);
+  } catch (err) {
+    console.error(err);
+    alert("Error al guardar la nota Egibide");
+  }
+};
+
+const guardarNotaCuaderno = async () => {
+  try {
+    await alumnoStore.guardarNotaCuadernoByAlumno(alumnoId, notaCuaderno.value ?? 0);
+  } catch (err) {
+    console.error(err);
+    alert("Error al guardar la nota del cuaderno");
+  }
+};
+
 // Computeds
-const notasTecnicasPorAsignatura = computed(() => {
+const notasTecnicasPorAsignatura = computed<Record<number, number>>(() => {
   const map: Record<number, number> = {};
-  notasTecnicas.value.forEach((n) => {
-    map[n.asignatura_id] = n.nota_media;
+  (notasTecnicas.value ?? []).forEach((n) => {
+    map[n.asignatura_id] = Number(n.nota_media ?? 0);
   });
   return map;
 });
 
 const notaFinalPorAsignatura = computed<Record<number, number>>(() => {
   const map: Record<number, number> = {};
-
-  asignaturas.value.forEach((asignatura) => {
+  (asignaturas.value ?? []).forEach((asignatura) => {
     const egibide = Number(notasEgibidePorAsignatura.value[asignatura.id] ?? 0);
-    const tecnica = notasTecnicasPorAsignatura.value[asignatura.id];
+    const tecnica = notasTecnicasPorAsignatura.value[asignatura.id] ?? 0;
     const transversal = notaTransversal.value ?? 0;
     const cuaderno = notaCuaderno.value ?? 0;
 
@@ -92,7 +120,6 @@ const notaFinalPorAsignatura = computed<Record<number, number>>(() => {
     if (tecnica != null) {
       notaEmpresa = tecnica * 0.6 + transversal * 0.2 + cuaderno * 0.2;
     } else {
-      // Técnica no existe → 60% pasa al 20% transversal
       notaEmpresa = transversal * 0.8 + cuaderno * 0.2;
     }
 
@@ -104,18 +131,13 @@ const notaFinalPorAsignatura = computed<Record<number, number>>(() => {
 });
 
 const getNotaFinal = (asignaturaId: number) => {
-  const nota = notaFinalPorAsignatura.value[asignaturaId];
-  return isNaN(nota ?? NaN) ? "-" : nota;
+  const nota = notaFinalPorAsignatura.value?.[asignaturaId] ?? 0;
+  return isNaN(nota) ? "-" : nota;
 };
 
-const volver = () => {
-  router.back();
-};
+const volver = () => router.back();
+const volverAlumnos = () => { router.back(); router.back(); };
 
-const volverAlumnos = () => {
-  router.back();
-  router.back();
-};
 const setNotaEgibide = (asignaturaId: number, e: Event) => {
   let v = Number((e.target as HTMLInputElement).value);
   if (isNaN(v)) v = 0;

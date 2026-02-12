@@ -8,25 +8,42 @@ use App\Models\NotaAsignatura;
 use App\Models\NotaCuaderno;
 use App\Services\CalcularNotasCompetenciasTecnicas;
 use App\Services\CalcularNotasCompetenciasTransversales;
+use Exception;
 use Illuminate\Http\Request;
+
+use function Pest\Laravel\call;
 
 class NotasController extends Controller {
     public function obtenerNotasTecnicas($alumnoId, CalcularNotasCompetenciasTecnicas $calcularNotas) {
-        $notas = $calcularNotas->calcularNotasTecnicas($alumnoId);
+        try{
+            $notas = $calcularNotas->calcularNotasTecnicas($alumnoId);
 
-        return response()->json([
-            'alumno_id' => $alumnoId,
-            'notas_competenciasTec' => array_values($notas),
-        ]);
+            return response()->json([
+                'alumno_id' => $alumnoId,
+                'notas_competenciasTec' => array_values($notas),
+            ]);
+        }catch(Exception $e){
+            return response()->json([
+                'alumno_id' => $alumnoId,
+                'notas_competenciasTec' => null,
+            ]);
+        }
     }
 
     public function obtenerNotasTransversales($alumnoId, CalcularNotasCompetenciasTransversales $calcularNotas) {
-        $notas = $calcularNotas->calcularNotasTransversales($alumnoId);
+        try{
+            $notas = $calcularNotas->calcularNotasTransversales($alumnoId);
 
-        return response()->json([
-            'estancia_id' => $notas['estancia_id'] ?? null,
-            'nota_media' => $notas['nota_media'] ?? null,
-        ]);
+            return response()->json([
+                'estancia_id' => $notas['estancia_id'] ?? null,
+                'nota_media' => $notas['nota_media'] ?? null,
+            ]);
+        }catch(Exception $e){
+            return response()->json([
+                'alumno_id' => $alumnoId,
+                'notas_competenciasTec' => null,
+            ]);
+        }
     }
 
     public function obtenerNotasEgibide($alumnoId) {
@@ -62,13 +79,20 @@ class NotasController extends Controller {
     }
 
     public function obtenerNotaCuadernoByAlumno($alumnoId) {
-        $estancia = Estancia::where('alumno_id', $alumnoId)->firstOrFail();
+        try{
+            $estancia = Estancia::where('alumno_id', $alumnoId)->firstOrFail();
 
-        $notaCuaderno = NotaCuaderno::whereHas('cuadernoPracticas', function ($query) use ($estancia) {
-            $query->where('estancia_id', $estancia->id);
-        })->first();
+            $notaCuaderno = NotaCuaderno::whereHas('cuadernoPracticas', function ($query) use ($estancia) {
+                $query->where('estancia_id', $estancia->id);
+            })->first();
 
-        return response()->json($notaCuaderno);
+            return response()->json($notaCuaderno);
+        }catch(Exception $e){
+            return response()->json([
+                'alumno_id' => $alumnoId,
+                'notas_competenciasTec' => null,
+            ]);
+        }
     }
 
     public function guardarNotasCuaderno(Request $request) {
